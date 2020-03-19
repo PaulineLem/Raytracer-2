@@ -80,13 +80,10 @@ Vector getColor(const Ray rayCam, const Scene s, Vector lumOrigin){
 
     Vector PL =(lumOrigin - P);
 
-    double intensite;
-    intensite = 1000000 * std::max(0., dot(PL.getNormalized(), N))/PL.getNorm2();
+    Vector intensite;
+    intensite = s.spheres[sphere_id].albedo * 1000 * std::max(0., dot(PL.getNormalized(), N))/PL.getNorm2();
         
-    pixelColor = Vector(std::min(255., std::max(0., intensite)), std::min(255., std::max(0., intensite)),std::min(255., std::max(0., intensite)));
-    
-    
-
+    pixelColor = Vector(std::min(255., std::max(0., intensite[0])), std::min(255., std::max(0., intensite[1])),std::min(255., std::max(0., intensite[2])));
     
        return pixelColor;
 }
@@ -100,8 +97,8 @@ int main() {
     std::vector<unsigned char> image(W*H * 3);
     
     Vector cameraPos(0., 0., 55);
-    Sphere sphere_1(Vector(0,0, 0),10);
-    Sphere sphere_2(Vector(0,-1000, 0),990);
+    Sphere sphere_1(Vector(0,0, 0),10, Vector(255., 255., 255));
+    Sphere sphere_2(Vector(0,-1000, 0),990, Vector(0., 0., 255));
 
     Scene s;
     Vector lumOrigin(-10, 20, 40);
@@ -128,7 +125,7 @@ int main() {
             image[((H-i-1)*W + j) * 3 + 2] = pixColor[2];
         }
     }
-    save_image("seance1-rond-blanc-diffus-plusieurs-spheres.bmp",&image[0], W, H);
+    save_image("seance1-rond-blanc-diffus-plusieurs-spheres-couleur.bmp",&image[0], W, H);
 
     return 0;
 }

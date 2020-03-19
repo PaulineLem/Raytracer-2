@@ -13,10 +13,11 @@ class Ray {
 
 class Sphere {
     public :
-    Sphere(const Vector& o, const double& r ) : origin(o), rayon(r) {};
-    bool intersection (const Ray& rayCam,  Vector& P, Vector& N, double &t) const ; 
+    Sphere(const Vector& o, const double& r, const Vector &color ) : origin(o), rayon(r), albedo(color) {};
+    bool intersection (const Ray& rayCam,  Vector& P, Vector& N, double &t) const ;
     Vector origin;
     double rayon;
+    Vector albedo;
 };
 
 class Scene {
