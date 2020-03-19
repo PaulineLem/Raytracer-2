@@ -68,10 +68,13 @@ void save_image(const char* filename, const unsigned char* tableau, int w, int h
     delete[] row;
 }
 
-Vector getColor(const Ray rayCam, const Sphere S, Vector lumOrigin){
+Vector getColor(const Ray rayCam, const Scene s, Vector lumOrigin){
     Vector pixelColor(0.,0.,0.);
     Vector P, N;
-    bool intersect = S.intersection(rayCam, P, N);
+    double t;
+    int sphere_id;
+    bool intersect = s.intersection(rayCam, P, N, sphere_id, t);
+    s.spheres[sphere_id].intersection(rayCam, P, N, t);
     
     if (!intersect) return pixelColor;
 
@@ -96,9 +99,16 @@ int main() {
     double fov = 60 * M_PI / 180;
     std::vector<unsigned char> image(W*H * 3);
     
-    Vector cameraPos(0., 0., 0.);
-    Sphere sphere_1(Vector(0,0, -50),10);
-    Vector lumOrigin(15, 70, -40);
+    Vector cameraPos(0., 0., 55);
+    Sphere sphere_1(Vector(0,0, 0),10);
+    Sphere sphere_2(Vector(0,-1000, 0),990);
+
+    Scene s;
+    Vector lumOrigin(-10, 20, 40);
+    
+    s.addSphere(sphere_1);
+    s.addSphere(sphere_2);
+
 
   
     // Lance des thread pour la boucle for suivante
@@ -111,7 +121,7 @@ int main() {
             direction.normalize();
             Ray rayCam(cameraPos, direction);
             
-            pixColor=getColor(rayCam, sphere_1, lumOrigin);
+            pixColor=getColor(rayCam, s, lumOrigin);
 
             image[((H-i-1)*W + j) * 3 + 0] = pixColor[0];
             image[((H-i-1)*W + j) * 3 + 1] = pixColor[1];
