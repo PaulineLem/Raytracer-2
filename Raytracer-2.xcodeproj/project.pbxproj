@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		2F786DAE24237A5E006FDA69 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F786DAD24237A5E006FDA69 /* main.cpp */; };
+		2F786DB824237C20006FDA69 /* Vector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F786DB624237C20006FDA69 /* Vector.cpp */; };
+		2F786DBB24237D83006FDA69 /* Objects.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F786DB924237D83006FDA69 /* Objects.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +27,12 @@
 /* Begin PBXFileReference section */
 		2F786DAA24237A5E006FDA69 /* Raytracer-2 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Raytracer-2"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F786DAD24237A5E006FDA69 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		2F786DB424237BEA006FDA69 /* stb_image.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stb_image.h; sourceTree = "<group>"; };
+		2F786DB524237C06006FDA69 /* stb_image_write.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stb_image_write.h; sourceTree = "<group>"; };
+		2F786DB624237C20006FDA69 /* Vector.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Vector.cpp; sourceTree = "<group>"; };
+		2F786DB724237C20006FDA69 /* Vector.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Vector.hpp; sourceTree = "<group>"; };
+		2F786DB924237D83006FDA69 /* Objects.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Objects.cpp; sourceTree = "<group>"; };
+		2F786DBA24237D83006FDA69 /* Objects.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Objects.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +66,12 @@
 			isa = PBXGroup;
 			children = (
 				2F786DAD24237A5E006FDA69 /* main.cpp */,
+				2F786DB424237BEA006FDA69 /* stb_image.h */,
+				2F786DB524237C06006FDA69 /* stb_image_write.h */,
+				2F786DB624237C20006FDA69 /* Vector.cpp */,
+				2F786DB724237C20006FDA69 /* Vector.hpp */,
+				2F786DB924237D83006FDA69 /* Objects.cpp */,
+				2F786DBA24237D83006FDA69 /* Objects.hpp */,
 			);
 			path = "Raytracer-2";
 			sourceTree = "<group>";
@@ -119,7 +133,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2F786DB824237C20006FDA69 /* Vector.cpp in Sources */,
 				2F786DAE24237A5E006FDA69 /* main.cpp in Sources */,
+				2F786DBB24237D83006FDA69 /* Objects.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
