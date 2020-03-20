@@ -13,11 +13,12 @@ class Ray {
 
 class Sphere {
     public :
-    Sphere(const Vector& o, const double& r, const Vector &color ) : origin(o), rayon(r), albedo(color) {};
+    Sphere(const Vector& o, const double& r, const Vector &color, const bool &is_mirror = false) : origin(o), rayon(r), albedo(color), mirror(is_mirror){};
     bool intersection (const Ray& rayCam,  Vector& P, Vector& N, double &t) const ;
     Vector origin;
     double rayon;
     Vector albedo;
+    bool mirror;
 };
 
 class Scene {

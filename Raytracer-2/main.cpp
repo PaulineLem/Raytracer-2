@@ -68,20 +68,41 @@ void save_image(const char* filename, const unsigned char* tableau, int w, int h
     delete[] row;
 }
 
-Vector getColor(const Ray rayCam, const Scene s, Vector lumOrigin){
+Vector getColor(const Ray rayCam, const Scene s, Vector lumOrigin, int nb_rebond){
+    double eps(0.001);
     Vector pixelColor(0.,0.,0.);
     Vector P, N;
     double t;
     int sphere_id;
     bool intersect = s.intersection(rayCam, P, N, sphere_id, t);
-    s.spheres[sphere_id].intersection(rayCam, P, N, t);
-    
     if (!intersect) return pixelColor;
-
+    
+//    if (s.spheres[sphere_id].mirror && nb_rebond>0) {
+//        pixelColor = getColor(ray_refl, s, lumOrigin, nb_rebon)
+//        
+//    }
     Vector PL =(lumOrigin - P);
+    double d2 = PL.getNorm2();
 
+    
+//Gestion des ombres portées
+    Ray new_ray(P+eps*N, PL.getNormalized());
+    Vector newP, newN;
+    double new_t;
+    int new_sphere_id;
+    
+    bool new_intersect = s.intersection(new_ray, newP, newN, new_sphere_id, new_t);
+    if (new_intersect) {
+        Vector newPP =(P - newP);
+        double newd2 = newPP.getNorm2();
+        if (newd2<d2){
+            return pixelColor;
+        }
+        
+    }
+    
     Vector intensite;
-    intensite = s.spheres[sphere_id].albedo * 1000 * std::max(0., dot(PL.getNormalized(), N))/PL.getNorm2();
+    intensite = s.spheres[sphere_id].albedo * 1000 * std::max(0., dot(PL.getNormalized(), N))/d2;
         
     pixelColor = Vector(std::min(255., std::max(0., intensite[0])), std::min(255., std::max(0., intensite[1])),std::min(255., std::max(0., intensite[2])));
     
@@ -118,14 +139,14 @@ int main() {
             direction.normalize();
             Ray rayCam(cameraPos, direction);
             
-            pixColor=getColor(rayCam, s, lumOrigin);
+            pixColor=getColor(rayCam, s, lumOrigin, 5);
 
             image[((H-i-1)*W + j) * 3 + 0] = pixColor[0];
             image[((H-i-1)*W + j) * 3 + 1] = pixColor[1];
             image[((H-i-1)*W + j) * 3 + 2] = pixColor[2];
         }
     }
-    save_image("seance1-rond-blanc-diffus-plusieurs-spheres-couleur.bmp",&image[0], W, H);
+    save_image("seance2-ombres-portées-sans vruit.bmp",&image[0], W, H);
 
     return 0;
 }
