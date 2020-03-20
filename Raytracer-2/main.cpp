@@ -123,11 +123,8 @@ Vector getColor(const Ray rayCam, const Scene s, Vector lumOrigin, int nb_rebond
             
         }
         
-        Vector intensite;
-        intensite = s.spheres[sphere_id].albedo * 3000 * std::max(0., dot(PL.getNormalized(), N))/d2;
-            
-        pixelColor = Vector(std::min(255., std::max(0., intensite[0])), std::min(255., std::max(0., intensite[1])),std::min(255., std::max(0., intensite[2])));
-        
+        pixelColor =  s.spheres[sphere_id].albedo * 1000000 * std::max(0., dot(PL.getNormalized(), N))/d2;
+                    
         }
     }
     return pixelColor;
@@ -181,12 +178,12 @@ int main() {
             
             pixColor=getColor(rayCam, s, lumOrigin, 5);
 
-            image[((H-i-1)*W + j) * 3 + 0] = pixColor[0];
-            image[((H-i-1)*W + j) * 3 + 1] = pixColor[1];
-            image[((H-i-1)*W + j) * 3 + 2] = pixColor[2];
+            image[((H-i-1)*W + j) * 3 + 0] = std::min(255., std::max(0.,pow(pixColor[0], 1/2.2)));
+            image[((H-i-1)*W + j) * 3 + 1] = std::min(255., std::max(0.,pow(pixColor[1], 1/2.2)));
+            image[((H-i-1)*W + j) * 3 + 2] = std::min(255., std::max(0.,pow(pixColor[2], 1/2.2)));
         }
     }
-    save_image("seance2-ombres-portées-surface-transp-mir.bmp",&image[0], W, H);
+    save_image("seance3-correction-gamma.bmp",&image[0], W, H);
 
     return 0;
 }
