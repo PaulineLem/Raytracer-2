@@ -22,6 +22,9 @@
 #include <vector>
 #include "Vector.hpp"
 #include "Objects.hpp"
+#include "random.hpp"
+
+
 
 
 
@@ -69,7 +72,7 @@ void save_image(const char* filename, const unsigned char* tableau, int w, int h
 }
 
 
-Vector getColor(const Ray rayCam, const Scene s, Vector lumOrigin, int nb_rebond){
+Vector getColor(const Ray rayCam, const Scene s,  int nb_rebond){
     double eps(0.001);
     Vector pixelColor(0.,0.,0.);
     Vector P, N;
@@ -82,7 +85,7 @@ Vector getColor(const Ray rayCam, const Scene s, Vector lumOrigin, int nb_rebond
     if (s.spheres[sphere_id].mirror ) {
             Vector dir_refl(rayCam.direction - 2*dot(N, rayCam.direction)*N);
             Ray ray_refl(P+eps*N, dir_refl);
-            pixelColor = getColor(ray_refl, s, lumOrigin, nb_rebond-1);
+            pixelColor = getColor(ray_refl, s, nb_rebond-1);
         }
     else {
         if (s.spheres[sphere_id].transparent ) {
@@ -99,12 +102,14 @@ Vector getColor(const Ray rayCam, const Scene s, Vector lumOrigin, int nb_rebond
             if (radical > 0) {
                 Vector dir_refr = (n1/n2)*(rayCam.direction - dot(rayCam.direction, Ntransp)*Ntransp) - Ntransp * sqrt (radical);
                 Ray refrRay(P - eps*Ntransp, dir_refr);
-                pixelColor = getColor(refrRay, s, lumOrigin, nb_rebond-1);
+                pixelColor = getColor(refrRay, s, nb_rebond-1);
             }
             
         }
         else {
-        Vector PL =(lumOrigin - P);
+            
+            //eclairage direct
+        Vector PL =(s.lumOrigin - P);
         double d2 = PL.getNorm2();
 
     //Gestion des ombres portées
@@ -114,18 +119,25 @@ Vector getColor(const Ray rayCam, const Scene s, Vector lumOrigin, int nb_rebond
         int new_sphere_id;
         
         bool new_intersect = s.intersection(new_ray, newP, newN, new_sphere_id, new_t);
-        if (new_intersect) {
-            Vector newPP =(P - newP);
-            double newd2 = newPP.getNorm2();
-            if (newd2<d2){
-                return pixelColor;
-            }
-            
+        if (new_intersect && new_t*new_t <d2) {
+
+               pixelColor = Vector(0., 0., 0.);
         }
         
-        pixelColor =  s.spheres[sphere_id].albedo * 1000000 * std::max(0., dot(PL.getNormalized(), N))/d2;
-                    
+            else {
+                    pixelColor =  s.spheres[sphere_id].albedo/M_PI * s.lumIntensite * std::max(0., dot(PL.getNormalized(), N))/d2;
+            }
+
+
+            
+            
+//             contribution indirect (meme chose que miroir mais rayons aleatoires
+
+            Vector dir_alea= randomcos(N);
+            Ray ray_alea(P+eps*N, dir_alea);
+            pixelColor += getColor(ray_alea, s, nb_rebond-1)*s.spheres[sphere_id].albedo ;
         }
+        
     }
     return pixelColor;
 
@@ -138,10 +150,12 @@ int main() {
     int H = 1024;
     double fov = 60 * M_PI / 180;
     std::vector<unsigned char> image(W*H * 3);
+    int nb_rayon = 80;
+    
     
     Vector cameraPos(0., 0., 55);
-    Sphere sphere_1(Vector(-10,0, 10),5, Vector(255, 255,255), false, true);
-    Sphere sphere_7(Vector(10,0, 10),5, Vector(255, 255,255), true);
+    Sphere sphere_1(Vector(0,0, 10),7, Vector(255, 255,255));
+    Sphere sphere_7(Vector(10,0, 10),5, Vector(255, 255,255));
 
     Sphere sphere_2(Vector(0,-1000, 0),990, Vector (0.,0.,255)); //ground
     Sphere sphere_3(Vector(0,1000, 0),970, Vector (255.,0.,0.)); //ceiling
@@ -154,10 +168,11 @@ int main() {
 
 
     Scene s;
-    Vector lumOrigin(-10, 20, 40);
+    s.lumOrigin = Vector(-10, 20, 40);
+    s.lumIntensite = 500000;
     
     s.addSphere(sphere_1);
-    s.addSphere(sphere_7);
+//    s.addSphere(sphere_7);
     s.addSphere(sphere_2);
     s.addSphere(sphere_3);
     s.addSphere(sphere_4);
@@ -165,25 +180,29 @@ int main() {
     s.addSphere(sphere_6);
 
 
-  
+  #pragma omp parallel for
+
     // Lance des thread pour la boucle for suivante
     for (int i = 0; i < H; i++) {
         
         for (int j = 0; j < W; j++) {
             Vector pixColor=(0.,0.,0.);
             
-            Vector direction(j-W/2 +0.5 , i-H/2+0.5, -H/ (2*tan(fov/2)));
-            direction.normalize();
-            Ray rayCam(cameraPos, direction);
+            for (int k=0; k<nb_rayon; k++) {
+                Vector direction(j-W/2 +0.5 , i-H/2+0.5, -H/ (2*tan(fov/2)));
+                direction.normalize();
+                Ray rayCam(cameraPos, direction);
+                
+                pixColor+=getColor(rayCam, s, 5) ;
+            }
+            pixColor = pixColor/nb_rayon;
             
-            pixColor=getColor(rayCam, s, lumOrigin, 5);
-
             image[((H-i-1)*W + j) * 3 + 0] = std::min(255., std::max(0.,pow(pixColor[0], 1/2.2)));
             image[((H-i-1)*W + j) * 3 + 1] = std::min(255., std::max(0.,pow(pixColor[1], 1/2.2)));
             image[((H-i-1)*W + j) * 3 + 2] = std::min(255., std::max(0.,pow(pixColor[2], 1/2.2)));
         }
     }
-    save_image("seance3-correction-gamma.bmp",&image[0], W, H);
+    save_image("seance3-eclairage-indirect-plusieurs-test.bmp",&image[0], W, H);
 
     return 0;
 }

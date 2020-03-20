@@ -10,6 +10,8 @@
 		2F786DAE24237A5E006FDA69 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F786DAD24237A5E006FDA69 /* main.cpp */; };
 		2F786DB824237C20006FDA69 /* Vector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F786DB624237C20006FDA69 /* Vector.cpp */; };
 		2F786DBB24237D83006FDA69 /* Objects.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F786DB924237D83006FDA69 /* Objects.cpp */; };
+		2F786DBE2424E925006FDA69 /* random.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2F786DBC2424E925006FDA69 /* random.cpp */; };
+		2F786DC52424FEA0006FDA69 /* libomp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F786DC02424FBAE006FDA69 /* libomp.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -33,6 +35,9 @@
 		2F786DB724237C20006FDA69 /* Vector.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Vector.hpp; sourceTree = "<group>"; };
 		2F786DB924237D83006FDA69 /* Objects.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Objects.cpp; sourceTree = "<group>"; };
 		2F786DBA24237D83006FDA69 /* Objects.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Objects.hpp; sourceTree = "<group>"; };
+		2F786DBC2424E925006FDA69 /* random.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = random.cpp; sourceTree = "<group>"; };
+		2F786DBD2424E925006FDA69 /* random.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = random.hpp; sourceTree = "<group>"; };
+		2F786DC02424FBAE006FDA69 /* libomp.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libomp.dylib; path = ../../../../../../usr/local/Cellar/llvm/9.0.1/lib/libomp.dylib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -40,6 +45,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2F786DC52424FEA0006FDA69 /* libomp.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -51,6 +57,7 @@
 			children = (
 				2F786DAC24237A5E006FDA69 /* Raytracer-2 */,
 				2F786DAB24237A5E006FDA69 /* Products */,
+				2F786DBF2424FBAE006FDA69 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -72,8 +79,18 @@
 				2F786DB724237C20006FDA69 /* Vector.hpp */,
 				2F786DB924237D83006FDA69 /* Objects.cpp */,
 				2F786DBA24237D83006FDA69 /* Objects.hpp */,
+				2F786DBC2424E925006FDA69 /* random.cpp */,
+				2F786DBD2424E925006FDA69 /* random.hpp */,
 			);
 			path = "Raytracer-2";
+			sourceTree = "<group>";
+		};
+		2F786DBF2424FBAE006FDA69 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2F786DC02424FBAE006FDA69 /* libomp.dylib */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -133,6 +150,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2F786DBE2424E925006FDA69 /* random.cpp in Sources */,
 				2F786DB824237C20006FDA69 /* Vector.cpp in Sources */,
 				2F786DAE24237A5E006FDA69 /* main.cpp in Sources */,
 				2F786DBB24237D83006FDA69 /* Objects.cpp in Sources */,
@@ -254,7 +272,16 @@
 		2F786DB224237A5E006FDA69 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CC = /usr/local/opt/llvm/bin/clang;
+				CLANG_ENABLE_MODULES = NO;
 				CODE_SIGN_STYLE = Automatic;
+				COMPILER_INDEX_STORE_ENABLE = NO;
+				HEADER_SEARCH_PATHS = /usr/local/opt/llvm/lib/clang/9.0.1/include;
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/opt/llvm/lib,
+					/usr/local/Cellar/llvm/9.0.1/lib,
+				);
+				OTHER_CFLAGS = "-fopenmp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -262,7 +289,17 @@
 		2F786DB324237A5E006FDA69 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CC = /usr/local/opt/llvm/bin/clang;
+				CLANG_ENABLE_MODULES = NO;
 				CODE_SIGN_STYLE = Automatic;
+				COMPILER_INDEX_STORE_ENABLE = NO;
+				HEADER_SEARCH_PATHS = /usr/local/opt/llvm/lib/clang/9.0.1/include;
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/opt/llvm/lib,
+					/usr/local/Cellar/llvm/9.0.1/lib,
+				);
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = "-fopenmp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -277,7 +314,7 @@
 				2F786DB024237A5E006FDA69 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		2F786DB124237A5E006FDA69 /* Build configuration list for PBXNativeTarget "Raytracer-2" */ = {
 			isa = XCConfigurationList;
@@ -286,7 +323,7 @@
 				2F786DB324237A5E006FDA69 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
