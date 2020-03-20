@@ -68,6 +68,7 @@ void save_image(const char* filename, const unsigned char* tableau, int w, int h
     delete[] row;
 }
 
+
 Vector getColor(const Ray rayCam, const Scene s, Vector lumOrigin, int nb_rebond){
     double eps(0.001);
     Vector pixelColor(0.,0.,0.);
@@ -75,38 +76,62 @@ Vector getColor(const Ray rayCam, const Scene s, Vector lumOrigin, int nb_rebond
     double t;
     int sphere_id;
     bool intersect = s.intersection(rayCam, P, N, sphere_id, t);
-    if (!intersect) return pixelColor;
     
-//    if (s.spheres[sphere_id].mirror && nb_rebond>0) {
-//        pixelColor = getColor(ray_refl, s, lumOrigin, nb_rebon)
-//        
-//    }
-    Vector PL =(lumOrigin - P);
-    double d2 = PL.getNorm2();
+    if (!intersect || nb_rebond ==0) return pixelColor;
+    
+    if (s.spheres[sphere_id].mirror ) {
+            Vector dir_refl(rayCam.direction - 2*dot(N, rayCam.direction)*N);
+            Ray ray_refl(P+eps*N, dir_refl);
+            pixelColor = getColor(ray_refl, s, lumOrigin, nb_rebond-1);
+        }
+    else {
+        if (s.spheres[sphere_id].transparent ) {
+            double n1=1;
+            double n2=1.5; //verre
+            Vector Ntransp(N);
+            if(dot(rayCam.direction,N)>0) {
+                //si le rayon sort de la sphere
+                n1=1.5;
+                n2=1;
+                Ntransp = -N;
+            }
+            double radical = 1-pow((n1/n2),2)*(1-pow((dot(Ntransp , rayCam.direction)),2));
+            if (radical > 0) {
+                Vector dir_refr = (n1/n2)*(rayCam.direction - dot(rayCam.direction, Ntransp)*Ntransp) - Ntransp * sqrt (radical);
+                Ray refrRay(P - eps*Ntransp, dir_refr);
+                pixelColor = getColor(refrRay, s, lumOrigin, nb_rebond-1);
+            }
+            
+        }
+        else {
+        Vector PL =(lumOrigin - P);
+        double d2 = PL.getNorm2();
 
-    
-//Gestion des ombres portées
-    Ray new_ray(P+eps*N, PL.getNormalized());
-    Vector newP, newN;
-    double new_t;
-    int new_sphere_id;
-    
-    bool new_intersect = s.intersection(new_ray, newP, newN, new_sphere_id, new_t);
-    if (new_intersect) {
-        Vector newPP =(P - newP);
-        double newd2 = newPP.getNorm2();
-        if (newd2<d2){
-            return pixelColor;
+    //Gestion des ombres portées
+        Ray new_ray(P+eps*N, PL.getNormalized());
+        Vector newP, newN;
+        double new_t;
+        int new_sphere_id;
+        
+        bool new_intersect = s.intersection(new_ray, newP, newN, new_sphere_id, new_t);
+        if (new_intersect) {
+            Vector newPP =(P - newP);
+            double newd2 = newPP.getNorm2();
+            if (newd2<d2){
+                return pixelColor;
+            }
+            
         }
         
-    }
-    
-    Vector intensite;
-    intensite = s.spheres[sphere_id].albedo * 1000 * std::max(0., dot(PL.getNormalized(), N))/d2;
+        Vector intensite;
+        intensite = s.spheres[sphere_id].albedo * 3000 * std::max(0., dot(PL.getNormalized(), N))/d2;
+            
+        pixelColor = Vector(std::min(255., std::max(0., intensite[0])), std::min(255., std::max(0., intensite[1])),std::min(255., std::max(0., intensite[2])));
         
-    pixelColor = Vector(std::min(255., std::max(0., intensite[0])), std::min(255., std::max(0., intensite[1])),std::min(255., std::max(0., intensite[2])));
-    
-       return pixelColor;
+        }
+    }
+    return pixelColor;
+
 }
 
 
@@ -118,14 +143,29 @@ int main() {
     std::vector<unsigned char> image(W*H * 3);
     
     Vector cameraPos(0., 0., 55);
-    Sphere sphere_1(Vector(0,0, 0),10, Vector(255., 255., 255));
-    Sphere sphere_2(Vector(0,-1000, 0),990, Vector(0., 0., 255));
+    Sphere sphere_1(Vector(-10,0, 10),5, Vector(255, 255,255), false, true);
+    Sphere sphere_7(Vector(10,0, 10),5, Vector(255, 255,255), true);
+
+    Sphere sphere_2(Vector(0,-1000, 0),990, Vector (0.,0.,255)); //ground
+    Sphere sphere_3(Vector(0,1000, 0),970, Vector (255.,0.,0.)); //ceiling
+    Sphere sphere_4(Vector(-1000,0, 0),940, Vector (255,255,0)); // left wall
+    Sphere sphere_5(Vector(1000,0, 0),940, Vector (255,0,255)); // right wall
+    Sphere sphere_6(Vector(0, 0, -1000),940, Vector (0.,255,0.)); // back wall
+    
+
+
+
 
     Scene s;
     Vector lumOrigin(-10, 20, 40);
     
     s.addSphere(sphere_1);
+    s.addSphere(sphere_7);
     s.addSphere(sphere_2);
+    s.addSphere(sphere_3);
+    s.addSphere(sphere_4);
+    s.addSphere(sphere_5);
+    s.addSphere(sphere_6);
 
 
   
@@ -146,7 +186,7 @@ int main() {
             image[((H-i-1)*W + j) * 3 + 2] = pixColor[2];
         }
     }
-    save_image("seance2-ombres-portées-sans vruit.bmp",&image[0], W, H);
+    save_image("seance2-ombres-portées-surface-transp-mir.bmp",&image[0], W, H);
 
     return 0;
 }
