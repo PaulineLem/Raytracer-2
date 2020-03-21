@@ -80,7 +80,14 @@ Vector getColor(const Ray rayCam, const Scene s,  int nb_rebond){
     int sphere_id;
     bool intersect = s.intersection(rayCam, P, N, sphere_id, t);
     
+    
+    
     if (!intersect || nb_rebond ==0) return pixelColor;
+    
+//    if(sphere_id==0){ return s.spheres[sphere_id].albedo * s.lumIntensite / ( 4 * M_PI * s.spheres[sphere_id].rayon * s.spheres[sphere_id].rayon);
+//        // On divise par 4PIR^2 pour avoir un rendu similaire à celui précedent pour la meme intensité, en effet, on a maintenant un sphere et plus une source ponctuelle
+//
+//    }
     
     if (s.spheres[sphere_id].mirror ) {
             Vector dir_refl(rayCam.direction - 2*dot(N, rayCam.direction)*N);
@@ -108,25 +115,25 @@ Vector getColor(const Ray rayCam, const Scene s,  int nb_rebond){
         }
         else {
             
-            //eclairage direct
-        Vector PL =(s.lumOrigin - P);
-        double d2 = PL.getNorm2();
-
-    //Gestion des ombres portées
-        Ray new_ray(P+eps*N, PL.getNormalized());
-        Vector newP, newN;
-        double new_t;
-        int new_sphere_id;
-        
-        bool new_intersect = s.intersection(new_ray, newP, newN, new_sphere_id, new_t);
-        if (new_intersect && new_t*new_t <d2) {
-
-               pixelColor = Vector(0., 0., 0.);
-        }
-        
-            else {
-                    pixelColor =  s.spheres[sphere_id].albedo/M_PI * s.lumIntensite * std::max(0., dot(PL.getNormalized(), N))/d2;
-            }
+//            //eclairage direct
+//        Vector PL =(s.lumOrigin - P);
+//        double d2 = PL.getNorm2();
+//
+//    //Gestion des ombres portées
+//        Ray new_ray(P+eps*N, PL.getNormalized());
+//        Vector newP, newN;
+//        double new_t;
+//        int new_sphere_id;
+//
+//        bool new_intersect = s.intersection(new_ray, newP, newN, new_sphere_id, new_t);
+//        if (new_intersect && new_t*new_t <d2) {
+//
+//               pixelColor = Vector(0., 0., 0.);
+//        }
+//
+//            else {
+//                    pixelColor =  s.spheres[sphere_id].albedo/M_PI * s.lumIntensite * std::max(0., dot(PL.getNormalized(), N))/d2;
+//            }
 
 
             
@@ -150,10 +157,12 @@ int main() {
     int H = 1024;
     double fov = 60 * M_PI / 180;
     std::vector<unsigned char> image(W*H * 3);
-    int nb_rayon = 80;
+    int nb_rayon = 40;
     
     
     Vector cameraPos(0., 0., 55);
+    Sphere sphere_lum(Vector(-10, 20, 40),10, Vector(1., 1.,1.));
+
     Sphere sphere_1(Vector(0,0, 10),7, Vector(1., 1.,1.));
     Sphere sphere_7(Vector(10,0, 10),5, Vector(1., 1.,1.));
 
@@ -171,6 +180,8 @@ int main() {
     s.lumOrigin = Vector(-10, 20, 40);
     s.lumIntensite = 1000000000;
     
+    s.addSphere(sphere_lum);
+
     s.addSphere(sphere_1);
 //    s.addSphere(sphere_7);
     s.addSphere(sphere_2);
@@ -211,7 +222,7 @@ int main() {
             image[((H-i-1)*W + j) * 3 + 2] = std::min(255., std::max(0.,pow(pixColor[2], 1/2.2)));
         }
     }
-    save_image("seance4-eclairage-indirect-avec-80-anti-a.bmp",&image[0], W, H);
+    save_image("seance4-lum-etendue-naive.bmp",&image[0], W, H);
 
     return 0;
 }
