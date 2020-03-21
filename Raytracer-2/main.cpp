@@ -167,7 +167,7 @@ int main() {
     int H = 1024;
     double fov = 60 * M_PI / 180;
     std::vector<unsigned char> image(W*H * 3);
-    int nb_rayon = 80;
+    int nb_rayon = 120;
     int focus_cam = 35;
     
     
@@ -175,7 +175,7 @@ int main() {
     
     Sphere sphere_lum(Vector(-10, 20, 40),10, Vector(1., 1.,1.));
 
-    Sphere sphere_1(Vector(0,0, -50),7, Vector(1., 1.,1.));
+    Sphere sphere_1(Vector(0,0, -focus_cam ),7, Vector(1., 1.,1.));
     Sphere sphere_7(Vector(10,0, -focus_cam ),5, Vector(1., 1.,1.));
 
     Sphere sphere_2(Vector(0,-1000, 0),990, Vector (0.,0.,1.)); //ground
@@ -228,7 +228,7 @@ int main() {
                 
                 Vector rand2 = random_vect();
                 Vector destination = cameraPos + focus_cam * direction;
-                Vector origine = cameraPos +Vector((rand2[0] -0.5) *5 , (rand2[0] -0.5) *5 , 0);
+                Vector origine = cameraPos +Vector((rand2[0] -0.5) *0.5 , (rand2[0] -0.5) *0.5 , 0);
                 Ray rayCam(origine, (destination-origine).getNormalized());
         
                 pixColor+=getColor(rayCam, s, 5) ;
@@ -240,7 +240,7 @@ int main() {
             image[((H-i-1)*W + j) * 3 + 2] = std::min(255., std::max(0.,pow(pixColor[2], 1/2.2)));
         }
     }
-    save_image("seance4-lum-etendue-grosse-ouv-cam-80r-hors-plan.bmp",&image[0], W, H);
+    save_image("seance4-lum-etendue-120r.bmp",&image[0], W, H);
 
     return 0;
 }
