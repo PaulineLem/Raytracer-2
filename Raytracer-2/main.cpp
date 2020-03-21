@@ -84,7 +84,7 @@ Vector getColor(const Ray rayCam, const Scene s,  int nb_rebond){
     
     if (!intersect || nb_rebond ==0) return pixelColor;
     
-//    if(sphere_id==0){ return s.spheres[sphere_id].albedo * s.lumIntensite / ( 4 * M_PI * s.spheres[sphere_id].rayon * s.spheres[sphere_id].rayon);
+//    if(sphere_id==0){ return s.lumiere->albedo * s.lumIntensite/ ( 4 * M_PI * s.lumiere->rayon * s.lumiere->rayon);
 //        // On divise par 4PIR^2 pour avoir un rendu similaire à celui précedent pour la meme intensité, en effet, on a maintenant un sphere et plus une source ponctuelle
 //
 //    }
@@ -115,28 +115,38 @@ Vector getColor(const Ray rayCam, const Scene s,  int nb_rebond){
         }
         else {
             
-//            //eclairage direct
-//        Vector PL =(s.lumOrigin - P);
-//        double d2 = PL.getNorm2();
-//
-//    //Gestion des ombres portées
-//        Ray new_ray(P+eps*N, PL.getNormalized());
-//        Vector newP, newN;
-//        double new_t;
-//        int new_sphere_id;
-//
-//        bool new_intersect = s.intersection(new_ray, newP, newN, new_sphere_id, new_t);
-//        if (new_intersect && new_t*new_t <d2) {
-//
-//               pixelColor = Vector(0., 0., 0.);
-//        }
-//
-//            else {
-//                    pixelColor =  s.spheres[sphere_id].albedo/M_PI * s.lumIntensite * std::max(0., dot(PL.getNormalized(), N))/d2;
-//            }
-
-
+                //                    Eclairage direct
+            //On ne génère les rayons que vers la source de lumière
+                Vector LumOr = s.lumiere->origin;
+                //P point d'intersection
+                Vector LP = P-LumOr;
+                LP.normalize();
+                Vector randSdir = randomcos(LP);
+                Vector Pi = LumOr + randSdir*s.lumiere->rayon; //point aleatoire sur la sphere (changement de variable dans l'equation du rendu)
+                Vector wi = Pi-P; // dir aleatoire
+                wi.normalize();
+        
+                double d2 = (Pi-P).getNorm2();
+                double costheta, costhetaprime, costhetasecond;
+                 costheta = std::max(0., dot(N, wi));
+                 costhetaprime = dot(randSdir,-wi );
+                 costhetasecond = dot(LP,randSdir);
             
+                Ray ray_lum(P + eps * N, wi);
+                Vector P_lum, N_lum;
+                int sphere_id_lum;
+                double t_lum;
+            
+                bool intersect_lum= s.intersection(ray_lum, P_lum, N_lum, sphere_id_lum, t_lum);
+
+                if ( intersect_lum && t_lum*t_lum < d2*0.99 ){
+                    pixelColor = Vector(0,0,0);
+                }
+                
+                else {
+                    pixelColor = (s.lumIntensite/(4*M_PI*d2)*costheta*costhetaprime/costhetasecond)* s.spheres[sphere_id].albedo;
+                }
+
             
 //             contribution indirect (meme chose que miroir mais rayons aleatoires
 
@@ -157,14 +167,16 @@ int main() {
     int H = 1024;
     double fov = 60 * M_PI / 180;
     std::vector<unsigned char> image(W*H * 3);
-    int nb_rayon = 40;
+    int nb_rayon = 80;
+    int focus_cam = 35;
     
     
-    Vector cameraPos(0., 0., 55);
+    Vector cameraPos(0., 0., 0. );
+    
     Sphere sphere_lum(Vector(-10, 20, 40),10, Vector(1., 1.,1.));
 
-    Sphere sphere_1(Vector(0,0, 10),7, Vector(1., 1.,1.));
-    Sphere sphere_7(Vector(10,0, 10),5, Vector(1., 1.,1.));
+    Sphere sphere_1(Vector(0,0, -50),7, Vector(1., 1.,1.));
+    Sphere sphere_7(Vector(10,0, -focus_cam ),5, Vector(1., 1.,1.));
 
     Sphere sphere_2(Vector(0,-1000, 0),990, Vector (0.,0.,1.)); //ground
     Sphere sphere_3(Vector(0,1000, 0),970, Vector (1.,0.,0.)); //ceiling
@@ -177,11 +189,7 @@ int main() {
 
 
     Scene s;
-    s.lumOrigin = Vector(-10, 20, 40);
-    s.lumIntensite = 1000000000;
-    
     s.addSphere(sphere_lum);
-
     s.addSphere(sphere_1);
 //    s.addSphere(sphere_7);
     s.addSphere(sphere_2);
@@ -189,6 +197,11 @@ int main() {
     s.addSphere(sphere_4);
     s.addSphere(sphere_5);
     s.addSphere(sphere_6);
+    
+    s.lumiere = &sphere_lum;
+    s.lumIntensite = 10000000000;
+
+
 
 
   #pragma omp parallel for
@@ -209,10 +222,15 @@ int main() {
                 dy = sin(2 * M_PI * rand[1])* sqrt(-2*log(rand[0])) *0.5;
                 
                 
+
                 Vector direction(j-W/2 +0.5 +dx , i-H/2+0.5 +dy, -H/ (2*tan(fov/2)));
                 direction.normalize();
-                Ray rayCam(cameraPos, direction);
                 
+                Vector rand2 = random_vect();
+                Vector destination = cameraPos + focus_cam * direction;
+                Vector origine = cameraPos +Vector((rand2[0] -0.5) *5 , (rand2[0] -0.5) *5 , 0);
+                Ray rayCam(origine, (destination-origine).getNormalized());
+        
                 pixColor+=getColor(rayCam, s, 5) ;
             }
             pixColor = pixColor/nb_rayon;
@@ -222,7 +240,7 @@ int main() {
             image[((H-i-1)*W + j) * 3 + 2] = std::min(255., std::max(0.,pow(pixColor[2], 1/2.2)));
         }
     }
-    save_image("seance4-lum-etendue-naive.bmp",&image[0], W, H);
+    save_image("seance4-lum-etendue-grosse-ouv-cam-80r-hors-plan.bmp",&image[0], W, H);
 
     return 0;
 }

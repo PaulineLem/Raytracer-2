@@ -23,15 +23,16 @@ class Sphere {
 
 };
 
+
+
 class Scene {
     public :
     Scene() {};
 
     void addSphere(const Sphere& s) {spheres.push_back(s);}
     bool intersection (const Ray& r,  Vector& P, Vector& N, int& sphere_id, double& min_t) const;
-
-    Vector lumOrigin;
     double lumIntensite;
+    Sphere *lumiere;
     std::vector<Sphere> spheres;
 
 };
