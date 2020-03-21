@@ -154,14 +154,14 @@ int main() {
     
     
     Vector cameraPos(0., 0., 55);
-    Sphere sphere_1(Vector(0,0, 10),7, Vector(255, 255,255));
-    Sphere sphere_7(Vector(10,0, 10),5, Vector(255, 255,255));
+    Sphere sphere_1(Vector(0,0, 10),7, Vector(1., 1.,1.));
+    Sphere sphere_7(Vector(10,0, 10),5, Vector(1., 1.,1.));
 
-    Sphere sphere_2(Vector(0,-1000, 0),990, Vector (0.,0.,255)); //ground
-    Sphere sphere_3(Vector(0,1000, 0),970, Vector (255.,0.,0.)); //ceiling
-    Sphere sphere_4(Vector(-1000,0, 0),940, Vector (255,255,0)); // left wall
-    Sphere sphere_5(Vector(1000,0, 0),940, Vector (255,0,255)); // right wall
-    Sphere sphere_6(Vector(0, 0, -1000),940, Vector (0.,255,0.)); // back wall
+    Sphere sphere_2(Vector(0,-1000, 0),990, Vector (0.,0.,1.)); //ground
+    Sphere sphere_3(Vector(0,1000, 0),970, Vector (1.,0.,0.)); //ceiling
+    Sphere sphere_4(Vector(-1000,0, 0),940, Vector (1.,1.,0)); // left wall
+    Sphere sphere_5(Vector(1000,0, 0),940, Vector (1.,0,1.)); // right wall
+    Sphere sphere_6(Vector(0, 0, -1000),940, Vector (0.,1.,0.)); // back wall
     
 
 
@@ -169,7 +169,7 @@ int main() {
 
     Scene s;
     s.lumOrigin = Vector(-10, 20, 40);
-    s.lumIntensite = 500000;
+    s.lumIntensite = 1000000000;
     
     s.addSphere(sphere_1);
 //    s.addSphere(sphere_7);
@@ -189,6 +189,15 @@ int main() {
             Vector pixColor=(0.,0.,0.);
             
             for (int k=0; k<nb_rayon; k++) {
+                double  dx, dy;
+                
+                //aiti-aisling
+                Vector rand = random_vect();
+
+                dx = cos(2 * M_PI * rand[1])* sqrt(-2*log(rand[0]));
+                dy = sin(2 * M_PI * rand[1])* sqrt(-2*log(rand[0]));
+                
+                
                 Vector direction(j-W/2 +0.5 , i-H/2+0.5, -H/ (2*tan(fov/2)));
                 direction.normalize();
                 Ray rayCam(cameraPos, direction);
@@ -202,7 +211,7 @@ int main() {
             image[((H-i-1)*W + j) * 3 + 2] = std::min(255., std::max(0.,pow(pixColor[2], 1/2.2)));
         }
     }
-    save_image("seance3-eclairage-indirect-plusieurs-test.bmp",&image[0], W, H);
+    save_image("seance3-eclairage-indirect-avec-80.bmp",&image[0], W, H);
 
     return 0;
 }

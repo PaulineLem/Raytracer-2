@@ -2,8 +2,8 @@
 #include <random>
 
 
+Vector random_vect();
 
 Vector randomcos(const Vector &N);
 
-Vector random_vect();
 
