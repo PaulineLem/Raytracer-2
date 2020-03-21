@@ -89,13 +89,13 @@ Vector getColor(const Ray rayCam, const Scene s,  int nb_rebond){
 //
 //    }
     
-    if (s.spheres[sphere_id].mirror ) {
+    if (s.objets[sphere_id]->mirror ) {
             Vector dir_refl(rayCam.direction - 2*dot(N, rayCam.direction)*N);
             Ray ray_refl(P+eps*N, dir_refl);
             pixelColor = getColor(ray_refl, s, nb_rebond-1);
         }
     else {
-        if (s.spheres[sphere_id].transparent ) {
+        if (s.objets[sphere_id]->transparent ) {
             double n1=1;
             double n2=1.5; //verre
             Vector Ntransp(N);
@@ -144,7 +144,7 @@ Vector getColor(const Ray rayCam, const Scene s,  int nb_rebond){
                 }
                 
                 else {
-                    pixelColor = (s.lumIntensite/(4*M_PI*d2)*costheta*costhetaprime/costhetasecond)* s.spheres[sphere_id].albedo;
+                    pixelColor = (s.lumIntensite/(4*M_PI*d2)*costheta*costhetaprime/costhetasecond)* s.objets[sphere_id]->albedo;
                 }
 
             
@@ -152,7 +152,7 @@ Vector getColor(const Ray rayCam, const Scene s,  int nb_rebond){
 
             Vector dir_alea= randomcos(N);
             Ray ray_alea(P+eps*N, dir_alea);
-            pixelColor += getColor(ray_alea, s, nb_rebond-1)*s.spheres[sphere_id].albedo ;
+            pixelColor += getColor(ray_alea, s, nb_rebond-1)*s.objets[sphere_id]->albedo ;
         }
         
     }
@@ -167,7 +167,7 @@ int main() {
     int H = 1024;
     double fov = 60 * M_PI / 180;
     std::vector<unsigned char> image(W*H * 3);
-    int nb_rayon = 120;
+    int nb_rayon = 20;
     int focus_cam = 35;
     
     
@@ -184,19 +184,23 @@ int main() {
     Sphere sphere_5(Vector(1000,0, 0),940, Vector (1.,0,1.)); // right wall
     Sphere sphere_6(Vector(0, 0, -1000),940, Vector (0.,1.,0.)); // back wall
     
+    Triangle triangle(Vector(-10, -10, -focus_cam), Vector(10, -10, -focus_cam), Vector(0, 10, -focus_cam), Vector(1, 0, 0));
+
+    
 
 
 
 
     Scene s;
     s.addSphere(sphere_lum);
-    s.addSphere(sphere_1);
+//    s.addSphere(sphere_1);
 //    s.addSphere(sphere_7);
     s.addSphere(sphere_2);
     s.addSphere(sphere_3);
     s.addSphere(sphere_4);
     s.addSphere(sphere_5);
     s.addSphere(sphere_6);
+    s.addTriangle(triangle);
     
     s.lumiere = &sphere_lum;
     s.lumIntensite = 10000000000;
@@ -240,7 +244,7 @@ int main() {
             image[((H-i-1)*W + j) * 3 + 2] = std::min(255., std::max(0.,pow(pixColor[2], 1/2.2)));
         }
     }
-    save_image("seance4-lum-etendue-120r.bmp",&image[0], W, H);
+    save_image("seance5-1-triangle.bmp",&image[0], W, H);
 
     return 0;
 }
