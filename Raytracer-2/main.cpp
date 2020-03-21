@@ -194,11 +194,11 @@ int main() {
                 //aiti-aisling
                 Vector rand = random_vect();
 
-                dx = cos(2 * M_PI * rand[1])* sqrt(-2*log(rand[0]));
-                dy = sin(2 * M_PI * rand[1])* sqrt(-2*log(rand[0]));
+                dx = cos(2 * M_PI * rand[1])* sqrt(-2*log(rand[0])) * 0.5;
+                dy = sin(2 * M_PI * rand[1])* sqrt(-2*log(rand[0])) *0.5;
                 
                 
-                Vector direction(j-W/2 +0.5 , i-H/2+0.5, -H/ (2*tan(fov/2)));
+                Vector direction(j-W/2 +0.5 +dx , i-H/2+0.5 +dy, -H/ (2*tan(fov/2)));
                 direction.normalize();
                 Ray rayCam(cameraPos, direction);
                 
@@ -211,7 +211,7 @@ int main() {
             image[((H-i-1)*W + j) * 3 + 2] = std::min(255., std::max(0.,pow(pixColor[2], 1/2.2)));
         }
     }
-    save_image("seance3-eclairage-indirect-avec-80.bmp",&image[0], W, H);
+    save_image("seance4-eclairage-indirect-avec-80-anti-a.bmp",&image[0], W, H);
 
     return 0;
 }
