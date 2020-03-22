@@ -144,7 +144,9 @@ Vector getColor(const Ray rayCam, const Scene s,  int nb_rebond){
                 }
                 
                 else {
+//                    if (sphere_id ==6 ){ std::cout<<"jesuisla"<< s.objets[sphere_id]->albedo[0]<<"\n" ;}
                     pixelColor = (s.lumIntensite/(4*M_PI*d2)*costheta*costhetaprime/costhetasecond)* s.objets[sphere_id]->albedo;
+
                 }
 
             
@@ -156,6 +158,8 @@ Vector getColor(const Ray rayCam, const Scene s,  int nb_rebond){
         }
         
     }
+//    if (sphere_id ==6 ){ std::cout<<"jesuisla"<< pixelColor[0]<<"\n" ;}
+
     return pixelColor;
 
 }
@@ -167,7 +171,7 @@ int main() {
     int H = 1024;
     double fov = 60 * M_PI / 180;
     std::vector<unsigned char> image(W*H * 3);
-    int nb_rayon = 20;
+    int nb_rayon = 8;
     int focus_cam = 35;
     
     
@@ -179,12 +183,15 @@ int main() {
     Sphere sphere_7(Vector(10,0, -focus_cam ),5, Vector(1., 1.,1.));
 
     Sphere sphere_2(Vector(0,-1000, 0),990, Vector (0.,0.,1.)); //ground
-    Sphere sphere_3(Vector(0,1000, 0),970, Vector (1.,0.,0.)); //ceiling
-    Sphere sphere_4(Vector(-1000,0, 0),940, Vector (1.,1.,0)); // left wall
-    Sphere sphere_5(Vector(1000,0, 0),940, Vector (1.,0,1.)); // right wall
+    Sphere sphere_3(Vector(0,1000, 0),970, Vector (0.,1.,0.)); //ceiling
+    Sphere sphere_4(Vector(-1000,0, 0),940, Vector (0.,1.,0)); // left wall
+    Sphere sphere_5(Vector(1000,0, 0),940, Vector (0.,0,1.)); // right wall
     Sphere sphere_6(Vector(0, 0, -1000),940, Vector (0.,1.,0.)); // back wall
     
-    Triangle triangle(Vector(-10, -10, -focus_cam), Vector(10, -10, -focus_cam), Vector(0, 10, -focus_cam), Vector(1, 0, 0));
+//    Triangle triangle_1(Vector(-10, -10, -focus_cam), Vector(10, -10, -focus_cam), Vector(0, 10, -focus_cam), Vector(1, 0, 0));
+    
+    Geometry geometry_1("Beautiful Girl.obj", 10,Vector(0, 0, -focus_cam), Vector (1,1,1));
+
 
     
 
@@ -200,7 +207,8 @@ int main() {
     s.addSphere(sphere_4);
     s.addSphere(sphere_5);
     s.addSphere(sphere_6);
-    s.addTriangle(triangle);
+//    s.addTriangle(triangle_1);
+    s.addGeometry(geometry_1);
     
     s.lumiere = &sphere_lum;
     s.lumIntensite = 10000000000;
@@ -244,7 +252,7 @@ int main() {
             image[((H-i-1)*W + j) * 3 + 2] = std::min(255., std::max(0.,pow(pixColor[2], 1/2.2)));
         }
     }
-    save_image("seance5-1-triangle.bmp",&image[0], W, H);
+    save_image("seance5-beautiful-girl-bien-placee.bmp",&image[0], W, H);
 
     return 0;
 }

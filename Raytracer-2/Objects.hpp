@@ -86,15 +86,21 @@ public:
             vertices[i] = scaling * vertices[i] + offset;
         }
         
-        build_bb(0, indices.size());
-        
+        bbox.bmin =vertices[0];
+        bbox.bmax =vertices[0];
+        for (int i=1; i<vertices.size(); i++) {
+            for (int j=0; j<3; j++) {
+
+                bbox.bmin[j] = std::min(bbox.bmin[j],vertices[i][j]);
+                bbox.bmax[j] = std::max(bbox.bmax[j],vertices[i][j]);
+
+            }
+        }
     };
     
     
     
     void readOBJ(const char* obj);
-    Bbox build_bb( int i0, int i1);
-
     bool intersection(const Ray& rayCam, Vector& P, Vector &N, double &t) const;
     
     std::vector<TriangleIndices> indices;
@@ -118,6 +124,8 @@ class Scene {
 
     void addSphere(const Sphere& s) {objets.push_back((Objet*)&s);}
     void addTriangle(const Triangle& t) {objets.push_back((Objet*)&t);}
+    void addGeometry(const Geometry& g) {objets.push_back((Objet*)&g);}
+
 
     bool intersection (const Ray& r,  Vector& P, Vector& N, int& sphere_id, double& min_t) const;
     double lumIntensite;

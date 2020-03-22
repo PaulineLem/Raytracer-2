@@ -41,8 +41,7 @@ bool Sphere::intersection(const Ray& rayCam,  Vector& P, Vector& N, double &t) c
 
 bool Triangle::intersection(const Ray& rayCam,  Vector& P, Vector& N, double &t) const {
     
-            N = cross(A-B, C-A);
-            N.normalize();
+            N = -cross(B-A, C-A);
             
             double denom = dot(rayCam.direction, N);
             if (std::abs(denom)< 0) return false; // ray parallele
@@ -51,6 +50,8 @@ bool Triangle::intersection(const Ray& rayCam,  Vector& P, Vector& N, double &t)
             if (t<0) return false ; //intersect derriere
             
             P = rayCam.origin + t*rayCam.direction; // Point d'intersection
+            N.normalize();
+
             
             double APAB = dot(P-A, B-A);
             double ACAB = dot(C-A, B-A);
@@ -91,8 +92,7 @@ bool Bbox::intersection(const Ray& r) const {
     double t_max = std::min(std::min(t_max_x,t_max_y),t_max_z) ;
     double t_min = std::max(std::max(t_min_x, t_min_y), t_min_z) ;
 
-    if(t_max<0) return false;
-    
+    if (t_max<0)return false;
     if (t_max - t_min > 0) return true ;
     return false;
 }
@@ -287,27 +287,7 @@ void Geometry::readOBJ(const char* obj) {
 }
 
 
-Bbox Geometry::build_bb(int i0, int i1)
-{
-    Bbox bb;
-    bb.bmin =vertices[indices[i0].vtxi];
-    bb.bmax =vertices[indices[i0].vtxi];
-    for (int i=i0; i<i1; i++) {// triangle
-        for( int k=0; k<3; k++){//dimension
-            bb.bmin[k] = std::min(bb.bmin[k],vertices[indices[i].vtxi][k]);
-            bb.bmax[k] = std::max(bb.bmax[k],vertices[indices[i].vtxi][k]);
-            
-            bb.bmin[k] = std::min(bb.bmin[k],vertices[indices[i].vtxj][k]);
-            bb.bmax[k] = std::max(bb.bmax[k],vertices[indices[i].vtxj][k]);
-            
-            bb.bmin[k] = std::min(bb.bmin[k],vertices[indices[i].vtxk][k]);
-            bb.bmax[k] = std::max(bb.bmax[k],vertices[indices[i].vtxk][k]);
-            
-        }
-    }
-    
-    return bb;
-}
+
 
     bool Geometry::intersection(const Ray& rayCam, Vector& P, Vector &N, double &t) const {
         
@@ -331,8 +311,7 @@ Bbox Geometry::build_bb(int i0, int i1)
                      t=localt;
                      P=localP;
                      N=localN;
-            
-        }
+                 }
              }
         }
             return intersection;
