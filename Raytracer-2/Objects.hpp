@@ -41,8 +41,10 @@ class Triangle : public Objet {
         albedo = color;
         mirror = is_mirror;
         transparent = is_transp;
-    };
-    bool intersection (const Ray& rayCam,  Vector& P, Vector& N, double &t) const ;
+    }
+    bool intersection(const Ray& rayCam, Vector& P, Vector &N, double &t) const;
+    bool intersection(const Ray& rayCam, Vector& P, Vector &N, double &t, double &alpha, double &beta, double &gamma) const ;
+
     const Vector &A;
     const Vector &B;
     const Vector &C;

@@ -42,7 +42,12 @@ bool Sphere::intersection(const Ray& rayCam,  Vector& P, Vector& N, double &t) c
     return true;
 }
 
-bool Triangle::intersection(const Ray& rayCam,  Vector& P, Vector& N, double &t) const {
+bool Triangle::intersection(const Ray& rayCam, Vector& P, Vector &N, double &t) const {
+    double alpha, beta, gamma;
+    return intersection( rayCam, P, N, t, alpha, beta, gamma);
+}
+
+bool Triangle::intersection(const Ray& rayCam, Vector& P, Vector &N, double &t, double &alpha, double &beta, double &gamma) const {
     
             N = -cross(B-A, C-A);
             
@@ -62,8 +67,6 @@ bool Triangle::intersection(const Ray& rayCam,  Vector& P, Vector& N, double &t)
             double APAC = dot(P-A, C-A);
             double ACAC = dot(C-A, C-A);
             double det = ABAB*ACAC-ACAB*ACAB;
-    
-            double alpha, beta, gamma;
             
             //Systeme de Crammer
             beta = (APAB*ACAC-APAC*ACAB)/det;
@@ -330,14 +333,14 @@ bool Geometry::intersection(const Ray& rayCam, Vector& P, Vector &N, double &t) 
                  Triangle tri(vertices[a], vertices[b], vertices[c], albedo, mirror, transparent);
                  Vector localP, localN;
                  double localt;
-                 if (tri.intersection(rayCam, localP, localN, localt)) {
-                    
+                double alpha, beta, gamma;
+                 if (tri.intersection(rayCam, localP, localN, localt,alpha, beta, gamma)) {
                      intersection = true;
                      if(localt<t){
                          t=localt;
                          P=localP;
-                         N=localN;
-                     }
+                         N = normals[indices[i].ni] * alpha + normals[indices[i].nj]*beta + normals[indices[i].nk]*gamma; //Moyenne barycentrique des normales aux coins du triangle
+                         N.normalize();                     }
                  }
             }
             
