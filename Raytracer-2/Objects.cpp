@@ -11,6 +11,9 @@
 #include <omp.h>
 #include <random>
 #include <map>
+#include <list>
+
+
 
 
 
@@ -289,35 +292,156 @@ void Geometry::readOBJ(const char* obj) {
 
 
 
-    bool Geometry::intersection(const Ray& rayCam, Vector& P, Vector &N, double &t) const {
+bool Geometry::intersection(const Ray& rayCam, Vector& P, Vector &N, double &t) const {
+    t=1E99;
+    bool intersection = false;
         
-        if(!bbox.intersection(rayCam)) return false;
-
-        t=1E99;
-        bool intersection = false;
-
-        for (int i=0; i<indices.size(); i++){
-            
-            int a = indices[i].vtxi ;
-             int b = indices[i].vtxj;
-             int c = indices[i].vtxk;
-             Triangle tri(vertices[a], vertices[b], vertices[c], albedo, mirror, transparent);
-             Vector localP, localN;
-             double localt;
-             if (tri.intersection(rayCam, localP, localN, localt)) {
-                
-                 intersection = true;
-                 if(localt<t){
-                     t=localt;
-                     P=localP;
-                     N=localN;
-                 }
-             }
+    //si pas d'intersection avec la racine, pas la peine d'aller plus loin
+    if(!bvh.bbox.intersection(rayCam)) return false;
+    
+    // on crée une liste des fils
+    std::list<const BVH*> l;
+    //on met le bvh racine dans la liste
+    l.push_front(&bvh);
+    
+    //Tant que notre liste n'est pas vide, on teste le BVH en tête de cette liste et on regarde si un de ses fils a une intersection avec le rayon, qu'on ajoute à la liste si c'est le cas. Si notre test de liste est une feuille, alors c'est qu'il y a intersection et on regarde, pour chaque triangle de cette bbox, s'il y a intersection
+    while(!l.empty()){
+        const BVH* bvh_test = l.front();
+        l.pop_front();
+        
+        //si mon bvh en cours de test a un fils dont la bbox a aussi une intersection avec mon rayon, je l'ajoute à la liste
+        if (bvh_test->arbreg && bvh_test->arbreg->bbox.intersection(rayCam)){
+            l.push_back(bvh_test->arbreg);
         }
+        //même chose avec le fils droit
+        if (bvh_test->arbred && bvh_test->arbred->bbox.intersection(rayCam)){
+            l.push_back(bvh_test->arbred);
+        }
+        
+        
+        if(!bvh_test->arbreg){// pas besoin de tester si arbre droit, car si pas d'arbre gauche, pas d'arbre droit
+            
+            // on est sur une feuille, on fait donc le même test qu'avant, sur l'ensemble des éléments (triangles) de la feuille
+            for (int i=bvh_test->i0; i<bvh_test->i1; i++){
+                
+                int a = indices[i].vtxi ;
+                 int b = indices[i].vtxj;
+                 int c = indices[i].vtxk;
+                 Triangle tri(vertices[a], vertices[b], vertices[c], albedo, mirror, transparent);
+                 Vector localP, localN;
+                 double localt;
+                 if (tri.intersection(rayCam, localP, localN, localt)) {
+                    
+                     intersection = true;
+                     if(localt<t){
+                         t=localt;
+                         P=localP;
+                         N=localN;
+                     }
+                 }
+            }
+            
+        }
+        
+    }
+
+
+
+
             return intersection;
         }
-                 
+
+
+Bbox Geometry::constr_bbox(int i0, int i1){
+    Bbox bbox;
+    bbox.bmin =vertices[indices[i0].vtxi];
+    bbox.bmax =vertices[indices[i0].vtxi];
+    for (int i=i0; i<i1; i++) {// triangle
+        for( int k=0; k<3; k++){//dimension
+            bbox.bmin[k] = std::min(bbox.bmin[k],vertices[indices[i].vtxi][k]);
+            bbox.bmax[k] = std::max(bbox.bmax[k],vertices[indices[i].vtxi][k]);
+            
+            bbox.bmin[k] = std::min(bbox.bmin[k],vertices[indices[i].vtxj][k]);
+            bbox.bmax[k] = std::max(bbox.bmax[k],vertices[indices[i].vtxj][k]);
+            
+            bbox.bmin[k] = std::min(bbox.bmin[k],vertices[indices[i].vtxk][k]);
+            bbox.bmax[k] = std::max(bbox.bmax[k],vertices[indices[i].vtxk][k]);
+            
+        }
+    }
     
+    return bbox;
+}
+
+void Geometry::constr_bvh(BVH *noeud, int i0, int i1){
+    noeud->i0 = i0;
+    noeud->i1 = i1;
+    noeud->bbox = constr_bbox(i0, i1);
+    noeud -> arbreg = NULL;
+    noeud -> arbred = NULL;
+    
+    Vector diag = noeud->bbox.bmax-noeud->bbox.bmin;
+    int dimension;
+//    choix de la plus grande dimension de la bbox
+    if((diag[0]>diag[1]) && (diag[0]>diag[2])){
+        dimension = 0;
+    }
+    else {
+        if ((diag[1]>diag[0]) && (diag[1]>diag[2]))
+        {
+            dimension = 1;
+        }
+        
+        else {
+            dimension =2 ;
+        }
+        
+    }
+    
+    double valeur_coupe = noeud -> bbox.bmin[dimension] + diag[dimension]/2; //la moitier de la bbox sur la dimension de coupe
+    
+//    pivot du quisk sort
+    int pivot = i0-1;
+
+    for(int i=i0; i<i1; i++){
+        
+        double bary_dim = (vertices[indices[i].vtxi][dimension] + vertices[indices[i].vtxj][dimension] + vertices[indices[i].vtxk][dimension])/3; //barycentre projeté sur la dimension de coupe de la bbox
+        //algo du quick sort
+        if(bary_dim <valeur_coupe){
+            pivot ++;
+            
+            //on remet directement en ordre le vecteur (TriangleIndices) indices, ainsi, on a juste besoin de travailler sur les indices et pas crée de nouveau vecteur trié
+            
+            std::swap(indices[i].vtxi, indices[pivot].vtxi);
+            std::swap(indices[i].vtxj, indices[pivot].vtxj);
+            std::swap(indices[i].vtxk, indices[pivot].vtxk);
+            
+            std::swap(indices[i].ni, indices[pivot].ni);
+            std::swap(indices[i].nj, indices[pivot].nj);
+            std::swap(indices[i].nk, indices[pivot].nk);
+            
+            std::swap(indices[i].uvi, indices[pivot].uvi);
+            std::swap(indices[i].uvj,indices[pivot].uvj);
+            std::swap(indices[i].uvk, indices[pivot].uvk);
+            
+            std::swap(indices[i].faceGroup, indices[pivot].faceGroup);
+            
+        }
+    }
+    
+    // si tous les éléments sont bien ordonnés ou si on a déja une feuille on ne faut rien
+    if(pivot < i0|| pivot>=i1-1 || i1==i0+1){
+        return;
+    }
+    // sinon on  crée les arbres fils gauche et droit de notre bvh en appelant recursivement la fonction
+    noeud->arbreg= new BVH();
+    constr_bvh(noeud->arbreg, i0, pivot+1);
+    
+    noeud->arbred= new BVH();
+    constr_bvh(noeud->arbred, pivot+1, i1);
+}
+
+
 
 
 

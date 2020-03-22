@@ -69,6 +69,16 @@ public:
     Vector bmin, bmax;
 };
 
+class BVH{
+public:
+
+    int i0, i1;
+    Bbox bbox;
+    
+    BVH *arbreg, *arbred;
+
+    
+};
 
 
 class Geometry : public Objet {
@@ -82,26 +92,23 @@ public:
         
         readOBJ(obj);
         
+        //on applique le scaling et l'offset
         for (int i = 0; i < vertices.size(); i++) {
             vertices[i] = scaling * vertices[i] + offset;
         }
         
-        bbox.bmin =vertices[0];
-        bbox.bmax =vertices[0];
-        for (int i=1; i<vertices.size(); i++) {
-            for (int j=0; j<3; j++) {
+        //on construit la bvh de l'objet
+        constr_bvh(&bvh, 0, indices.size());
+        
 
-                bbox.bmin[j] = std::min(bbox.bmin[j],vertices[i][j]);
-                bbox.bmax[j] = std::max(bbox.bmax[j],vertices[i][j]);
-
-            }
-        }
     };
     
     
     
     void readOBJ(const char* obj);
     bool intersection(const Ray& rayCam, Vector& P, Vector &N, double &t) const;
+    Bbox constr_bbox(int i0, int i1);
+    void constr_bvh(BVH *noeud, int i0, int i1);
     
     std::vector<TriangleIndices> indices;
     std::vector<Vector> vertices;
@@ -112,7 +119,7 @@ public:
     
     
     private :
-    Bbox bbox;
+    BVH bvh;
     std::vector<int> w,h;
 };
 

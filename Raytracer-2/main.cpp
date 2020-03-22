@@ -171,7 +171,7 @@ int main() {
     int H = 1024;
     double fov = 60 * M_PI / 180;
     std::vector<unsigned char> image(W*H * 3);
-    int nb_rayon = 8;
+    int nb_rayon = 100;
     int focus_cam = 35;
     
     
@@ -182,15 +182,15 @@ int main() {
     Sphere sphere_1(Vector(0,0, -focus_cam ),7, Vector(1., 1.,1.));
     Sphere sphere_7(Vector(10,0, -focus_cam ),5, Vector(1., 1.,1.));
 
-    Sphere sphere_2(Vector(0,-1000, 0),990, Vector (0.,0.,1.)); //ground
-    Sphere sphere_3(Vector(0,1000, 0),970, Vector (0.,1.,0.)); //ceiling
+    Sphere sphere_2(Vector(0,-1000, 0),990, Vector (0.7,0.7,0.7)); //ground
+    Sphere sphere_3(Vector(0,1000, 0),970, Vector (0.7,0.7,0.7)); //ceiling
     Sphere sphere_4(Vector(-1000,0, 0),940, Vector (0.,1.,0)); // left wall
     Sphere sphere_5(Vector(1000,0, 0),940, Vector (0.,0,1.)); // right wall
-    Sphere sphere_6(Vector(0, 0, -1000),940, Vector (0.,1.,0.)); // back wall
+    Sphere sphere_6(Vector(0, 0, -1000),940, Vector (0.,0.8,0.8)); // back wall
     
 //    Triangle triangle_1(Vector(-10, -10, -focus_cam), Vector(10, -10, -focus_cam), Vector(0, 10, -focus_cam), Vector(1, 0, 0));
     
-    Geometry geometry_1("Beautiful Girl.obj", 10,Vector(0, 0, -focus_cam), Vector (1,1,1));
+    Geometry geometry_1("Beautiful Girl.obj", 10,Vector(0, -10, -focus_cam), Vector (1,1,1));
 
 
     
@@ -211,7 +211,7 @@ int main() {
     s.addGeometry(geometry_1);
     
     s.lumiere = &sphere_lum;
-    s.lumIntensite = 10000000000;
+    s.lumIntensite = 1000000000;
 
 
 
@@ -252,7 +252,7 @@ int main() {
             image[((H-i-1)*W + j) * 3 + 2] = std::min(255., std::max(0.,pow(pixColor[2], 1/2.2)));
         }
     }
-    save_image("seance5-beautiful-girl-bien-placee.bmp",&image[0], W, H);
+    save_image("seance5-beautiful-girl-bvh-moins-lumiere.bmp",&image[0], W, H);
 
     return 0;
 }
