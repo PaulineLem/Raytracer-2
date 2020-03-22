@@ -18,7 +18,7 @@
 
 
 
-bool Sphere::intersection(const Ray& rayCam,  Vector& P, Vector& N, double &t) const {
+bool Sphere::intersection(const Ray& rayCam,  Vector& P, Vector& N, double &t, Vector &color) const {
     
         double a = 1;
        double b = 2*dot(rayCam.direction, rayCam.origin - origin);
@@ -39,17 +39,19 @@ bool Sphere::intersection(const Ray& rayCam,  Vector& P, Vector& N, double &t) c
     
     P = rayCam.origin + t * rayCam.direction;
     N = (P-origin).getNormalized();
+    color = albedo;
     return true;
 }
 
-bool Triangle::intersection(const Ray& rayCam, Vector& P, Vector &N, double &t) const {
+bool Triangle::intersection(const Ray& rayCam, Vector& P, Vector &N, double &t, Vector &color) const {
     double alpha, beta, gamma;
+    color = albedo;
     return intersection( rayCam, P, N, t, alpha, beta, gamma);
 }
 
 bool Triangle::intersection(const Ray& rayCam, Vector& P, Vector &N, double &t, double &alpha, double &beta, double &gamma) const {
     
-            N = -cross(B-A, C-A);
+            N = cross(B-A, C-A);
             
             double denom = dot(rayCam.direction, N);
             if (std::abs(denom)< 0) return false; // ray parallele
@@ -290,12 +292,55 @@ void Geometry::readOBJ(const char* obj) {
     }
     fclose(f);
     
+    f = fopen("Beautiful Girl.mtl","r");
+    while (!feof(f)) {
+        char line[255];
+        fgets(line, 255, f);
+        if (line[0]=='m' && line[4]=='K' && line[5]=='d'){
+            char texturefile[255];
+            sscanf(line, "map_Kd %100s\n", texturefile);
+            add_texture((std::string("texturesbmp/") + std::string(texturefile)).c_str());
+        }
+    }
+    fclose(f);
+    
+}
+
+void Geometry::add_texture(const char* filename) {
+    
+    textures.resize(textures.size() + 1);
+    w.resize(w.size() + 1);
+    h.resize(h.size() + 1);
+    
+    FILE* f;
+    f = fopen(filename, "r");
+    
+    unsigned char info[54];
+    
+    fread(info, sizeof(unsigned char), 54, f); // read the 54-byte header
+
+    w[w.size() - 1] = *(int*)&info[18]; // extract image height and width from header
+    h[h.size() - 1] = *(int*)&info[22];
+    
+    int size = 3 * w[w.size() - 1] * h[h.size() - 1];
+    
+    
+    textures[textures.size() - 1].resize(size);
+    
+    
+    fread(&textures[textures.size() - 1][0], sizeof(unsigned char), size, f); // read the rest of the data at once
+    fclose(f);
+    
+    
+    for (int i = 0; i < size; i += 3) {
+        std::swap(textures[textures.size() - 1][i], textures[textures.size() - 1][i + 2]);
+    }
 }
 
 
 
 
-bool Geometry::intersection(const Ray& rayCam, Vector& P, Vector &N, double &t) const {
+bool Geometry::intersection(const Ray& rayCam, Vector& P, Vector &N, double &t, Vector &color) const {
     t=1E99;
     bool intersection = false;
         
@@ -340,7 +385,24 @@ bool Geometry::intersection(const Ray& rayCam, Vector& P, Vector &N, double &t) 
                          t=localt;
                          P=localP;
                          N = normals[indices[i].ni] * alpha + normals[indices[i].nj]*beta + normals[indices[i].nk]*gamma; //Moyenne barycentrique des normales aux coins du triangle
-                         N.normalize();                     }
+                         N.normalize();
+                         
+                         //on veut renvoyer une couleur à l'intersection
+                         
+//                       On connait le groupe de texture grace à faceGroup
+                         int id_texture = indices[i].faceGroup;
+//                         Pour savoir quel indice prendre, on interpole les coordonnées uvs avec la moyenne barycentrique (comme pour les normales)
+                         int x = (uvs[indices[i].uvi][0] * alpha + uvs[indices[i].uvj][0]*beta + uvs[indices[i].uvk][0]*gamma) * (w[id_texture]-1);
+                         int y = (uvs[indices[i].uvi][1] * alpha + uvs[indices[i].uvj][1]*beta + uvs[indices[i].uvk][1]*gamma) * (h[id_texture]-1);
+                         
+                         
+                         //on récupère les couleurs dans le vector des textures généré par notre fonction add_texture
+                         double color_r = (textures[id_texture][(y*w[id_texture]+x)*3])/255.;
+                         double color_g = (textures[id_texture][(y*w[id_texture]+x)*3+1])/255.;
+                         double color_b = (textures[id_texture][(y*w[id_texture]+x)*3+2])/255.;
+                         
+                         color = Vector(color_r,color_g,color_b);
+                     }
                  }
             }
             
@@ -448,15 +510,15 @@ void Geometry::constr_bvh(BVH *noeud, int i0, int i1){
 
 
 
-bool Scene::intersection (const Ray& r,  Vector& P, Vector& N, int& sphere_id, double &t_min) const{
+bool Scene::intersection (const Ray& r,  Vector& P, Vector& N, int& sphere_id, double &t_min, Vector &color) const{
 
     bool has_inter = false;
     t_min = 1E99;
     
     for (int i=0; i<objets.size(); i++) {
-        Vector localP, localN;
+        Vector localP, localN, localColor;
         double localt;
-        bool local_has_inter = objets[i]->intersection(r, localP, localN, localt);
+        bool local_has_inter = objets[i]->intersection(r, localP, localN, localt, localColor);
         
         if (local_has_inter){
             has_inter = true;
@@ -465,6 +527,7 @@ bool Scene::intersection (const Ray& r,  Vector& P, Vector& N, int& sphere_id, d
                 P= localP;
                 N= localN;
                 sphere_id = i;
+                color = localColor;
             }
         }
     }

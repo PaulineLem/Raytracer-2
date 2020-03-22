@@ -75,19 +75,15 @@ void save_image(const char* filename, const unsigned char* tableau, int w, int h
 Vector getColor(const Ray rayCam, const Scene s,  int nb_rebond){
     double eps(0.001);
     Vector pixelColor(0.,0.,0.);
-    Vector P, N;
+    Vector P, N, albedo;
     double t;
     int sphere_id;
-    bool intersect = s.intersection(rayCam, P, N, sphere_id, t);
     
-    
-    
-    if (!intersect || nb_rebond ==0) return pixelColor;
-    
-//    if(sphere_id==0){ return s.lumiere->albedo * s.lumIntensite/ ( 4 * M_PI * s.lumiere->rayon * s.lumiere->rayon);
-//        // On divise par 4PIR^2 pour avoir un rendu similaire à celui précedent pour la meme intensité, en effet, on a maintenant un sphere et plus une source ponctuelle
-//
-//    }
+    if (nb_rebond ==0) return pixelColor;
+
+    bool intersect = s.intersection(rayCam, P, N, sphere_id, t, albedo);
+    if (!intersect) return pixelColor;
+
     
     if (s.objets[sphere_id]->mirror ) {
             Vector dir_refl(rayCam.direction - 2*dot(N, rayCam.direction)*N);
@@ -133,20 +129,18 @@ Vector getColor(const Ray rayCam, const Scene s,  int nb_rebond){
                  costhetasecond = dot(LP,randSdir);
             
                 Ray ray_lum(P + eps * N, wi);
-                Vector P_lum, N_lum;
+                Vector P_lum, N_lum, albedo_lum;
                 int sphere_id_lum;
                 double t_lum;
             
-                bool intersect_lum= s.intersection(ray_lum, P_lum, N_lum, sphere_id_lum, t_lum);
+                bool intersect_lum= s.intersection(ray_lum, P_lum, N_lum, sphere_id_lum, t_lum, albedo_lum);
 
                 if ( intersect_lum && t_lum*t_lum < d2*0.99 ){
                     pixelColor = Vector(0,0,0);
                 }
                 
                 else {
-//                    if (sphere_id ==6 ){ std::cout<<"jesuisla"<< s.objets[sphere_id]->albedo[0]<<"\n" ;}
-                    pixelColor = (s.lumIntensite/(4*M_PI*d2)*costheta*costhetaprime/costhetasecond)* s.objets[sphere_id]->albedo;
-
+                    pixelColor = (s.lumIntensite/(4*M_PI*d2)*costheta*costhetaprime/costhetasecond)* albedo;
                 }
 
             
@@ -154,7 +148,7 @@ Vector getColor(const Ray rayCam, const Scene s,  int nb_rebond){
 
             Vector dir_alea= randomcos(N);
             Ray ray_alea(P+eps*N, dir_alea);
-            pixelColor += getColor(ray_alea, s, nb_rebond-1)*s.objets[sphere_id]->albedo ;
+            pixelColor += getColor(ray_alea, s, nb_rebond-1)*albedo ;
         }
         
     }
@@ -171,26 +165,26 @@ int main() {
     int H = 1024;
     double fov = 60 * M_PI / 180;
     std::vector<unsigned char> image(W*H * 3);
-    int nb_rayon = 100;
+    int nb_rayon = 80;
     int focus_cam = 35;
     
     
     Vector cameraPos(0., 0., 0. );
     
-    Sphere sphere_lum(Vector(-10, 20, 40),10, Vector(1., 1.,1.));
+    Sphere sphere_lum(Vector(15, 70, 30), 15,Vector (1,1,1));
 
     Sphere sphere_1(Vector(0,0, -focus_cam ),7, Vector(1., 1.,1.));
     Sphere sphere_7(Vector(10,0, -focus_cam ),5, Vector(1., 1.,1.));
 
-    Sphere sphere_2(Vector(0,-1000, 0),990, Vector (0.7,0.7,0.7)); //ground
-    Sphere sphere_3(Vector(0,1000, 0),970, Vector (0.7,0.7,0.7)); //ceiling
-    Sphere sphere_4(Vector(-1000,0, 0),940, Vector (0.,1.,0)); // left wall
-    Sphere sphere_5(Vector(1000,0, 0),940, Vector (0.,0,1.)); // right wall
-    Sphere sphere_6(Vector(0, 0, -1000),940, Vector (0.,0.8,0.8)); // back wall
+    Sphere sphere_2(Vector(0,-2000-20, 0),2000, Vector (0.7,0.7,0.7)); //ground
+    Sphere sphere_3(Vector(0,2000+100, 0),2000, Vector (0.7,0.7,0.7)); //ceiling
+    Sphere sphere_4(Vector(-2000-50,0, 0),2000, Vector (0.,1.,0)); // left wall
+    Sphere sphere_5(Vector(2000+50,0, 0),2000,  Vector (0.,0,1.)); // right wall
+    Sphere sphere_6(Vector(0, 0, -2000-100),2000, Vector (0.,0.8,0.8)); // back wall
     
-    Triangle triangle_1(Vector(-10, -10, -focus_cam), Vector(10, -10, -focus_cam), Vector(0, 10, -focus_cam), Vector(1, 0, 0));
+//    Triangle triangle_1(Vector(-10, -10, -focus_cam), Vector(10, -10, -focus_cam), Vector(0, 10, -focus_cam), Vector(1, 0, 0));
     
-//    Geometry geometry_1("Beautiful Girl.obj", 10,Vector(0, -10, -focus_cam), Vector (1,1,1));
+    Geometry geometry_1("Beautiful Girl.obj", 10,Vector(0, -10, -focus_cam), Vector (1,1,1));
 
 
     
@@ -207,11 +201,11 @@ int main() {
     s.addSphere(sphere_4);
     s.addSphere(sphere_5);
     s.addSphere(sphere_6);
-    s.addTriangle(triangle_1);
-//    s.addGeometry(geometry_1);
+//    s.addTriangle(triangle_1);
+    s.addGeometry(geometry_1);
     
     s.lumiere = &sphere_lum;
-    s.lumIntensite = 1000000000;
+    s.lumIntensite = 5000000000;
 
 
 
@@ -252,7 +246,7 @@ int main() {
             image[((H-i-1)*W + j) * 3 + 2] = std::min(255., std::max(0.,pow(pixColor[2], 1/2.2)));
         }
     }
-    save_image("seance5-beautiful-girl-triangle.bmp",&image[0], W, H);
+    save_image("seance5-beautiful-girl-texture-1.bmp",&image[0], W, H);
 
     return 0;
 }

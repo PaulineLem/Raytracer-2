@@ -14,7 +14,7 @@ class Ray {
 class Objet {
     public :
     Objet(){};
-    virtual bool intersection (const Ray& rayCam,  Vector& P, Vector& N, double &t) const=0 ;
+    virtual bool intersection (const Ray& rayCam,  Vector& P, Vector& N, double &t, Vector &color) const=0 ;
     Vector albedo;
     bool mirror;
     bool transparent;
@@ -28,7 +28,7 @@ class Sphere :public Objet{
         mirror = is_mirror;
         transparent = is_transp;
     };
-    bool intersection (const Ray& rayCam,  Vector& P, Vector& N, double &t) const ;
+    bool intersection (const Ray& rayCam,  Vector& P, Vector& N, double &t, Vector &color) const ;
     Vector origin;
     double rayon;
 
@@ -42,7 +42,7 @@ class Triangle : public Objet {
         mirror = is_mirror;
         transparent = is_transp;
     }
-    bool intersection(const Ray& rayCam, Vector& P, Vector &N, double &t) const;
+    bool intersection(const Ray& rayCam, Vector& P, Vector &N, double &t, Vector &color) const;
     bool intersection(const Ray& rayCam, Vector& P, Vector &N, double &t, double &alpha, double &beta, double &gamma) const ;
 
     const Vector &A;
@@ -108,9 +108,11 @@ public:
     
     
     void readOBJ(const char* obj);
-    bool intersection(const Ray& rayCam, Vector& P, Vector &N, double &t) const;
+    bool intersection(const Ray& rayCam, Vector& P, Vector &N, double &t, Vector &color) const;
     Bbox constr_bbox(int i0, int i1);
     void constr_bvh(BVH *noeud, int i0, int i1);
+    void add_texture(const char* filename);
+
     
     std::vector<TriangleIndices> indices;
     std::vector<Vector> vertices;
@@ -123,6 +125,8 @@ public:
     private :
     BVH bvh;
     std::vector<int> w,h;
+    std::vector<std::vector<unsigned char> > textures;
+
 };
 
 
@@ -136,7 +140,7 @@ class Scene {
     void addGeometry(const Geometry& g) {objets.push_back((Objet*)&g);}
 
 
-    bool intersection (const Ray& r,  Vector& P, Vector& N, int& sphere_id, double& min_t) const;
+    bool intersection (const Ray& r,  Vector& P, Vector& N, int& sphere_id, double& min_t, Vector &color) const;
     double lumIntensite;
     Sphere *lumiere;
     std::vector<Objet*> objets;
