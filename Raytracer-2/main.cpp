@@ -165,16 +165,16 @@ int main() {
     int H = 1024;
     double fov = 60 * M_PI / 180;
     std::vector<unsigned char> image(W*H * 3);
-    int nb_rayon = 80;
-    int focus_cam = 35;
+    int nb_rayon = 500;
+    int focus_cam = 25;
     
     
     Vector cameraPos(0., 0., 0. );
     
     Sphere sphere_lum(Vector(15, 70, 30), 15,Vector (1,1,1));
 
-    Sphere sphere_1(Vector(0,0, -focus_cam ),7, Vector(1., 1.,1.));
-    Sphere sphere_7(Vector(10,0, -focus_cam ),5, Vector(1., 1.,1.));
+    Sphere sphere_1(Vector(10, 10, -focus_cam-5 ),5, Vector(1., 1.,1.), true);
+    Sphere sphere_7(Vector(10, -5, -focus_cam-5 ),5, Vector(1., 1.,1.), false, true);
 
     Sphere sphere_2(Vector(0,-2000-20, 0),2000, Vector (0.7,0.7,0.7)); //ground
     Sphere sphere_3(Vector(0,2000+100, 0),2000, Vector (0.7,0.7,0.7)); //ceiling
@@ -184,7 +184,7 @@ int main() {
     
 //    Triangle triangle_1(Vector(-10, -10, -focus_cam), Vector(10, -10, -focus_cam), Vector(0, 10, -focus_cam), Vector(1, 0, 0));
     
-    Geometry geometry_1("Beautiful Girl.obj", 10,Vector(0, -10, -focus_cam), Vector (1,1,1));
+    Geometry geometry_1("Beautiful Girl.obj", 10,Vector(-10, -10, -focus_cam), Vector (1,1,1));
 
 
     
@@ -194,8 +194,8 @@ int main() {
 
     Scene s;
     s.addSphere(sphere_lum);
-//    s.addSphere(sphere_1);
-//    s.addSphere(sphere_7);
+    s.addSphere(sphere_1);
+    s.addSphere(sphere_7);
     s.addSphere(sphere_2);
     s.addSphere(sphere_3);
     s.addSphere(sphere_4);
@@ -205,7 +205,7 @@ int main() {
     s.addGeometry(geometry_1);
     
     s.lumiere = &sphere_lum;
-    s.lumIntensite = 5000000000;
+    s.lumIntensite = 8000000000;
 
 
 
@@ -234,7 +234,7 @@ int main() {
                 
                 Vector rand2 = random_vect();
                 Vector destination = cameraPos + focus_cam * direction;
-                Vector origine = cameraPos +Vector((rand2[0] -0.5) *0.5 , (rand2[0] -0.5) *0.5 , 0);
+                Vector origine = cameraPos +Vector((rand2[0] -0.5) *0.5 , (rand2[1] -0.5) *0.5 , 0);
                 Ray rayCam(origine, (destination-origine).getNormalized());
         
                 pixColor+=getColor(rayCam, s, 5) ;
@@ -246,7 +246,7 @@ int main() {
             image[((H-i-1)*W + j) * 3 + 2] = std::min(255., std::max(0.,pow(pixColor[2], 1/2.2)));
         }
     }
-    save_image("seance5-beautiful-girl-texture-1.bmp",&image[0], W, H);
+    save_image("seance5-beautiful-girl-texture-500r.bmp",&image[0], W, H);
 
     return 0;
 }
